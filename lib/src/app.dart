@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:morning_cli_ui_app/src/split_view_page/split_view_page.dart';
 
 import 'home_page/home_page.dart';
 
@@ -13,6 +14,10 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
+      ).copyWith(
+        scrollbarTheme: const ScrollbarThemeData().copyWith(
+          thumbColor: MaterialStateProperty.all(Colors.cyanAccent),
+        ),
       ),
       home: const MyHomePage(),
     );

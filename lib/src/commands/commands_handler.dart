@@ -20,13 +20,19 @@ class Commands {
   static final _pids = HashSet<int>();
 
   static Future<void> kill() async {
+    print('Killing processes: ${_pids}');
     for(int pid in _pids){
       Process.killPid(pid);
     }
     _pids.clear();
+    print('All processes killed');
   }
 
   static Future<Stream<String>> deployAll() async  {
+    final startDockerApp = await Process.run('open', ['-a', 'Docker']);
+    print(startDockerApp.stdout);
+    print(startDockerApp.stderr);
+    _pids.add(startDockerApp.pid);
     final dockerUp = await Process.run('morning-cli', ['docker', 'down']);
     _pids.add(dockerUp.pid);
     print(dockerUp.stdout);
