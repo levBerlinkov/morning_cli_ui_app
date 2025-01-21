@@ -46,10 +46,12 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    Future.delayed(Duration.zero, () {
-      _scrollController.animateTo(_scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 100), curve: Curves.easeOut);
-    });
+    if(_scrollController.position.maxScrollExtent - _scrollController.position.pixels < 300) {
+      Future.delayed(Duration.zero, () {
+        _scrollController.animateTo(_scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 100), curve: Curves.easeOut);
+      });
+    }
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -126,7 +128,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           Commands.kill();
         })
       : IconButton(
-          icon: const Icon(Icons.play_arrow),
+          icon: const Icon(Icons.play_arrow, color: Colors.green),
           onPressed: () {
             setState(() {
               deployingLog = '';

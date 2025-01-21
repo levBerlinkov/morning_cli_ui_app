@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ).copyWith(
         scrollbarTheme: const ScrollbarThemeData().copyWith(
-          thumbColor: MaterialStateProperty.all(Colors.cyanAccent),
+          thumbColor: MaterialStateProperty.all(Colors.deepPurple),
         ),
       ),
       home: const MyHomePage(),
