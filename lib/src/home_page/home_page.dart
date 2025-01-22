@@ -8,6 +8,9 @@ import 'package:stop_watch_timer/stop_watch_timer.dart';
 
 import '../split_view_page/split_view_page.dart';
 
+const amountOfServices = 28;
+const version = '0.0.1';
+
 class MyHomePage extends StatefulWidget  {
   const MyHomePage({super.key});
 
@@ -19,6 +22,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   String deployedServices = 'loading...';
   int counter = 0;
   bool isDeploying = false;
+  bool restarting = false;
   String deployingLog = '';
   final _scrollController = ScrollController();
   DateTime start = DateTime.now();
@@ -46,12 +50,11 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    if(_scrollController.position.maxScrollExtent - _scrollController.position.pixels < 300) {
-      Future.delayed(Duration.zero, () {
+    if(_scrollController.hasClients && _scrollController.position.maxScrollExtent - _scrollController.position.pixels < 300) {
         _scrollController.animateTo(_scrollController.position.maxScrollExtent,
             duration: const Duration(milliseconds: 100), curve: Curves.easeOut);
-      });
     }
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -79,7 +82,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         SingleChildScrollView(
           child: Column(children:[
             if(isDeploying)
-              LinearProgressIndicator(),
+              LinearProgressIndicator(value: counter / amountOfServices, minHeight: 10, color: Colors.deepPurple),
               // Lottie.asset(
               //   alignment: Alignment.topCenter,
               //   fit: BoxFit.fitHeight,
@@ -93,14 +96,15 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             //   ),
             Text('Deployed services: $counter'),
             Text(deployedServices),
-                ],
-            ),
+          ]),
         )],
     );
   }
 
   Widget logWidget() {
     return Column(children: [
+      if(isDeploying)
+        const LinearProgressIndicator(),
       SingleChildScrollView(
               controller: _scrollController,
               child: Container(
@@ -117,41 +121,57 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   }
 
   Widget actionBar() {
-    return Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-      isDeploying ?
-        IconButton(
-            icon: const Icon(
-            Icons.stop,
-            color: Colors.red,
-          ),
-          onPressed: () {
-          Commands.kill();
-        })
-      : IconButton(
-          icon: const Icon(Icons.play_arrow, color: Colors.green),
-          onPressed: () {
-            setState(() {
-              deployingLog = '';
-              isDeploying = true;
-              _stopWatchTimer.onStartTimer();
-            });
-            Commands.deployAll().then((stream) {
-              stream.listen((log) {
-                print(log);
-                setState(() {
-                  deployingLog += Commands.cleanOutput(log);
-                });
-              }, onDone: () {
-                setState(() {
-                  _stopWatchTimer.onStopTimer();
-                  isDeploying = false;
-                });
-              });
-            });
-          }),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        const Text('version: $version'),
+        Spacer(),
+        Row(mainAxisAlignment: MainAxisAlignment.start,
+            children: [
 
-
-    ]);
+          isDeploying ?
+            IconButton(
+                icon: const Icon(
+                Icons.stop,
+                color: Colors.red,
+              ),
+              onPressed: () {
+              Commands.kill();
+            })
+          : IconButton(
+              icon: const Icon(Icons.play_arrow, color: Colors.green),
+              onPressed: () async {
+                setState(() {
+                  deployingLog = '';
+                  isDeploying = true;
+                  _stopWatchTimer.onStartTimer();
+                });
+                Commands.deployAll().then((stream)  {
+                  stream.listen((log) {
+                    print(log);
+                    setState(() {
+                      deployingLog += Commands.cleanOutput(log);
+                    });
+                  }, onDone: () {
+                    setState(() {
+                      _stopWatchTimer.onStopTimer();
+                      isDeploying = false;
+                    });
+                  });
+                });
+              }),
+          if(!isDeploying)
+            restarting ? const CircularProgressIndicator() : IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: () {
+                restarting = true;
+                Commands.restartDocker().then((_) => restarting = false).catchError((_) => restarting = false);
+              }),
+          if(isDeploying)
+            Text('${(counter / amountOfServices * 100).toInt()}%'),
+        ]),
+      ],
+    );
   }
 
   @override

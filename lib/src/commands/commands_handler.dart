@@ -29,6 +29,16 @@ class Commands {
   }
 
   static Future<Stream<String>> deployAll() async  {
+
+    final process = await Process.start('morning-cli', ['services', 'deploy', '--all']);
+    _pids.add(process.pid);
+
+    return StreamGroup.merge<List<int>>([
+      process.stdout,
+      process.stderr]).transform(utf8.decoder);
+  }
+
+  static Future<void> restartDocker() async {
     final startDockerApp = await Process.run('open', ['-a', 'Docker']);
     print(startDockerApp.stdout);
     print(startDockerApp.stderr);
@@ -41,14 +51,5 @@ class Commands {
     _pids.add(dockerDown.pid);
     print(dockerDown.stdout);
     print(dockerDown.stderr);
-    final process = await Process.start('morning-cli', ['services', 'deploy', '--all']);
-    _pids.add(process.pid);
-
-    return StreamGroup.merge<List<int>>([
-
-      process.stdout,
-      process.stderr]).transform(utf8.decoder);
-
-
   }
 }
